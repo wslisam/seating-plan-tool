@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生座位編排工具</title>
+    <style>
+        /* 基本樣式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background-color: #f8f9fa;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            text-align: center;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(44, 62, 80, 0.15);
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr 280px;
+            gap: 25px;
+            min-height: 600px;
+        }
+
+        /* 左側控制面板樣式 */
+        .control-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            height: fit-content;
+        }
+
+        /* 右側設定面板樣式 */
+        .settings-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            height: fit-content;
+        }
+
+        .panel-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .panel-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: #3498db;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        /* 表單元素樣式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #34495e;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        input[type="number"], input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background-color: #ffffff;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        /* 按鈕樣式 - 學校風格 */
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+            border: 2px solid transparent;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.25);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+
+        /* 複選框樣式 */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .checkbox-group:hover {
+            background-color: #f8f9fa;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.1);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        /* 座位圖樣式 */
+        .seating-area {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+
+        .seating-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .seating-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .seating-grid {
+            display: grid;
+            gap: 8px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .seat {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            user-select: none;
+            line-height: 1.2;
+            padding: 2px;
+            background: #ffffff;
+        }
+
+        .seat.male {
+            background: #ebf3fd;
+            border-color: #3498db;
+            color: #2980b9;
+        }
+
+        .seat.female {
+            background: #fdf2f8;
+            border-color: #e91e63;
+            color: #ad1457;
+        }
+
+        .seat.empty {
+            background: #f8f9fa;
+            border-color: #bdc3c7;
+            color: #95a5a6;
+        }
+
+        .seat.disabled {
+            background: #ffebee;
+            border-color: #e74c3c;
+            color: #c0392b;
+            position: relative;
+        }
+
+        .seat.disabled::before {
+            content: '×';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #e74c3c;
+        }
+
+        .seat.locked {
+            box-shadow: 0 0 0 3px #f39c12;
+        }
+
+        .seat:hover:not(.disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .seat.dragging {
+            opacity: 0.7;
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+
+        .seat.drop-target {
+            background: #fff3e0 !important;
+            border-color: #f39c12 !important;
+        }
+
+        /* 特殊標記 */
+        .seat.poor-vision::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 8px;
+            height: 8px;
+            background: #9c27b0;
+            border-radius: 50%;
+        }
+
+        .seat.tall::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 8px;
+            height: 8px;
+            background: #ff5722;
+            border-radius: 50%;
+        }
+
+        /* 圖例 */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid #bdc3c7;
+        }
+
+        /* 狀態指示器 */
+        .status-indicator {
+            background: #d5f4e6;
+            border: 1px solid #27ae60;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 15px 0;
+            display: none;
+            font-size: 14px;
+        }
+
+        .status-indicator.active {
+            display: block;
+        }
+
+        .status-indicator.warning {
+            background: #fef9e7;
+            border-color: #f39c12;
+        }
+
+        .status-indicator.error {
+            background: #fdedec;
+            border-color: #e74c3c;
+        }
+
+        .status-indicator.info {
+            background: #ebf3fd;
+            border-color: #3498db;
+        }
+
+        /* 班級管理標籤 */
+        .class-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .class-tab {
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 6px 6px 0 0;
+            padding: 10px 15px;
+            cursor: pointer;
+            white-space: nowrap;
+            position: relative;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .class-tab.active {
+            background: white;
+            border-bottom-color: white;
+            border-color: #3498db;
+        }
+
+        .class-tab:hover:not(.active) {
+            background: #d5dbdb;
+        }
+
+        .class-tab .tab-name {
+            margin-right: 8px;
+        }
+
+        .class-tab .edit-btn {
+            margin-right: 5px;
+            color: #7f8c8d;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .class-tab .edit-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .class-tab .close-btn {
+            color: #95a5a6;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .class-tab .close-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .add-class-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .add-class-btn:hover {
+            background: #229954;
+        }
+
+        /* 歷史記錄 */
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ecf0f1;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .history-item:hover {
+            background: #e9ecef;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-delete {
+            color: #e74c3c;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .history-delete:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* 匯入匯出區域 */
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            background: #95a5a6;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            background: #7f8c8d;
+        }
+
+        /* 載入動畫 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #ecf0f1;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* 操作說明 */
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #34495e;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 300px 1fr;
+                gap: 20px;
+            }
+            
+            .settings-panel {
+                grid-column: 1;
+                order: 3;
+            }
+            
+            .seating-area {
+                grid-column: 2;
+                order: 2;
+            }
+            
+            .control-panel {
+                grid-column: 1 / -1;
+                order: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .control-panel {
+                order: 1;
+            }
+
+            .seating-area {
+                order: 2;
+            }
+            
+            .settings-panel {
+                order: 3;
+            }
+
+            .seat {
+                width: 45px;
+                height: 45px;
+                font-size: 10px;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .seating-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .seating-stats {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 同學各位找個位</h1>
+            <p>學生座位編排工具 By Sam Li</p>
+        </header>
+
+        <!-- 班級管理標籤 -->
+        <div class="class-tabs" id="classTabs">
+            <div class="class-tab active" data-class="default">
+                <span class="tab-name">預設班級</span>
+                <span class="edit-btn" onclick="editClassName('default')" title="編輯班級名稱">✎</span>
+                <span class="close-btn" onclick="deleteClass('default')" title="刪除班級">&times;</span>
+            </div>
+            <button class="add-class-btn" onclick="addNewClass()">+ 新增班級</button>
+        </div>
+
+        <div class="main-content">
+            <!-- 左側控制面板 -->
+            <div class="control-panel">
+                <!-- 教室設定 -->
+                <div class="panel-section">
+                    <div class="section-title">🏫 教室設定</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rows">行數</label>
+                            <input type="number" id="rows" min="1" max="10" value="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="cols">列數</label>
+                            <input type="number" id="cols" min="1" max="10" value="6">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 學生名單 -->
+                <div class="panel-section">
+                    <div class="section-title">👥 學生名單</div>
+                    <div class="form-group">
+                        <label for="studentList">格式：姓名,性別[,特殊標記]</label>
+                        <textarea id="studentList" placeholder="範例：&#10;王小明,男&#10;李小華,女&#10;張大明,男,視力不佳&#10;陳小美,女,高個子&#10;&#10;特殊標記可用：視力不佳、高個子"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="file-input-label" for="csvInput">📁 匯入TXT檔案</label>
+                        <input type="file" id="csvInput" class="file-input" accept=".csv,.txt">
+                    </div>
+                </div>
+
+                <!-- 編排規則 -->
+                <div class="panel-section">
+                    <div class="section-title">⚙️ 編排規則</div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="genderAlternate">
+                        <label for="genderAlternate">男女間隔排列</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="frontPoorVision" checked>
+                        <label for="frontPoorVision">視力不佳坐前排</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="backTall" checked>
+                        <label for="backTall">高個子坐後排</label>
+                    </div>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <!-- <div class="panel-section">
+                    <button class="btn" onclick="generateSeating()">🎲 開始編排座位</button>
+                    <button class="btn btn-secondary" onclick="clearSeating()">🗑️ 清空座位表</button>
+                    <button class="btn btn-success" onclick="exportSeating()">💾 匯出座位圖片</button>
+                    <button class="btn btn-warning" onclick="exportCSV()">📄 匯出CSV檔案</button>
+                </div> -->
+            </div>
+
+            <!-- 中間座位圖顯示區域 -->
+            <div class="seating-area">
+                <div class="seating-header">
+                    <h2>座位配置圖</h2>
+                    <div class="seating-stats">
+                        <div class="stat-item">
+                            <span style="color: #3498db;">👦</span>
+                            <span id="maleCount">男生：0人</span>
+                        </div>
+                        <div class="stat-item">
+                            <span style="color: #e91e63;">👧</span>
+                            <span id="femaleCount">女生：0人</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>📍</span>
+                            <span id="seatCount">座位：0個</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 圖例 -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ebf3fd; border-color: #3498db;"></div>
+                        <span>男學生</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fdf2f8; border-color: #e91e63;"></div>
+                        <span>女學生</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f8f9fa; border-color: #bdc3c7;"></div>
+                        <span>空座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffebee; border-color: #e74c3c;"></div>
+                        <span>禁用座位</span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 12px; height: 12px; background: #9c27b0; border-radius: 50%;"></div>
+                        <span>視力不佳</span>
+                    </div>
+                    <div class="legend-item">
+                        <div style="width: 12px; height: 12px; background: #ff5722; border-radius: 50%;"></div>
+                        <span>高個子</span>
+                    </div>
+                </div>
+
+                <!-- 座位網格 -->
+                <div class="seating-grid" id="seatingGrid"></div>
+
+                <!-- 載入動畫 -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>正在生成座位表...</p>
+                </div>
+
+                <!-- 狀態指示器 -->
+                <div class="status-indicator" id="statusIndicator"></div>
+
+                <!-- 操作說明 -->
+                <div class="instructions">
+                    <h4>💡 操作說明</h4>
+                    <ul>
+                        <li>拖拽學生卡片可以交換座位位置</li>
+                        <li>右鍵點擊座位可以鎖定/解鎖或禁用/啟用</li>
+                        <li>點擊「開始編排座位」自動生成最佳座位表</li>
+                        <li>支援匯出座位圖片</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 右側設定面板 -->
+            <div class="settings-panel">
+                <!-- 歷史記錄 -->
+                <div class="panel-section">
+                    <div class="section-title">📚 歷史記錄</div>
+                    <div class="history-list" id="historyList">
+                        <div style="text-align: center; padding: 20px; color: #95a5a6;">暫無歷史記錄</div>
+                    </div>
+                    <button class="btn btn-danger" onclick="clearHistory()" style="margin-top: 10px;">清空歷史記錄</button>
+                </div>
+
+                <!-- 快速操作 -->
+                <div class="panel-section">
+                    <div class="section-title">⚡ 快速操作</div>
+                    <!-- <button class="btn btn-secondary" onclick="randomShuffle()">🔀 隨機重排</button>
+                    <button class="btn btn-success" onclick="optimizeLayout()">✨ 優化配置</button> -->
+                     <button class="btn" onclick="generateSeating()">🔀 開始編排座位</button>
+                    <button class="btn btn-secondary" onclick="clearSeating()">🗑️ 清空座位表</button>
+                    <button class="btn btn-success" onclick="exportSeating()">💾 匯出座位圖片</button>
+                    <!-- <button class="btn btn-warning" onclick="exportCSV()">📄 匯出CSV檔案</button> -->
+                </div>
+
+                <!-- 統計資訊 -->
+                <div class="panel-section">
+                    <div class="section-title">📊 統計資訊</div>
+                    <div style="font-size: 14px; color: #7f8c8d; line-height: 1.8;">
+                        <div id="totalStudents">總學生數：0人</div>
+                        <div id="maleRatio">男生比例：0%</div>
+                        <div id="femaleRatio">女生比例：0%</div>
+                        <div id="specialNeeds">特殊需求：0人</div>
+                        <div id="occupancyRate">座位使用率：0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentSeating = [];
+        let students = [];
+        let rows = 6;
+        let cols = 6;
+        let draggedElement = null;
+        let draggedIndex = null;
+        let disabledSeats = new Set();
+        let lockedSeats = new Map();
+        let currentClass = 'default';
+        let classes = {
+            'default': {
+                name: '預設班級',
+                students: [],
+                history: []
+            }
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            updateSeatingGrid();
+            bindEvents();
+            updateActiveRules();
+            updateAllStats();
+        });
+
+        // 綁定事件
+        function bindEvents() {
+            // 教室格局變更
+            document.getElementById('rows').addEventListener('change', function() {
+                rows = parseInt(this.value);
+                updateSeatingGrid();
+                saveToStorage();
+            });
+
+            document.getElementById('cols').addEventListener('change', function() {
+                cols = parseInt(this.value);
+                updateSeatingGrid();
+                saveToStorage();
+            });
+
+            // 學生名單變更
+            document.getElementById('studentList').addEventListener('input', function() {
+                parseStudentList();
+                updateAllStats();
+                saveToStorage();
+            });
+
+            // 規則變更
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateActiveRules();
+                    saveToStorage();
+                });
+            });
+
+            // CSV 匯入
+            document.getElementById('csvInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('studentList').value = e.target.result;
+                        parseStudentList();
+                        updateAllStats();
+                        saveToStorage();
+                        showStatus('檔案匯入成功！', 'success');
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            // 鍵盤快捷鍵
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 'r':
+                            e.preventDefault();
+                            generateSeating();
+                            break;
+                        case 's':
+                            e.preventDefault();
+                            exportSeating();
+                            break;
+                    }
+                }
+            });
+        }
+
+        // 解析學生名單
+        function parseStudentList() {
+            const text = document.getElementById('studentList').value.trim();
+            students = [];
+            
+            if (!text) return;
+
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                
+                const parts = line.split(',').map(p => p.trim());
+                if (parts.length >= 2) {
+                    const student = {
+                        name: parts[0],
+                        gender: parts[1],
+                        special: parts.slice(2)
+                    };
+                    students.push(student);
+                }
+            });
+
+            // 更新當前班級的學生資料
+            classes[currentClass].students = [...students];
+        }
+
+        // 更新座位網格
+        function updateSeatingGrid() {
+            const grid = document.getElementById('seatingGrid');
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.innerHTML = '';
+
+            currentSeating = Array(rows * cols).fill(null);
+            
+            for (let i = 0; i < rows * cols; i++) {
+                const seat = document.createElement('div');
+                seat.className = 'seat empty';
+                seat.dataset.index = i;
+                seat.textContent = '空位';
+                
+                // 添加事件監聽
+                seat.addEventListener('dragover', handleDragOver);
+                seat.addEventListener('drop', handleDrop);
+                seat.addEventListener('click', handleSeatClick);
+                seat.addEventListener('contextmenu', handleSeatRightClick);
+                
+                grid.appendChild(seat);
+            }
+
+            updateSeatDisplay();
+            updateAllStats();
+        }
+
+        // 生成座位表
+        function generateSeating() {
+            if (students.length === 0) {
+                showStatus('請先輸入學生名單', 'error');
+                return;
+            }
+
+            const totalSeats = rows * cols;
+            const availableSeats = totalSeats - disabledSeats.size;
+            
+            if (students.length > availableSeats) {
+                showStatus(`學生人數(${students.length})超過可用座位數(${availableSeats})`, 'error');
+                return;
+            }
+
+            showLoading(true);
+            
+            setTimeout(() => {
+                try {
+                    // 複製學生陣列
+                    let availableStudents = [...students];
+                    
+                    // 初始化座位表
+                    currentSeating = Array(rows * cols).fill(null);
+                    
+                    // 保留鎖定的座位
+                    lockedSeats.forEach((student, index) => {
+                        if (student) {
+                            currentSeating[index] = student;
+                            const studentIndex = availableStudents.findIndex(s => s.name === student.name);
+                            if (studentIndex !== -1) {
+                                availableStudents.splice(studentIndex, 1);
+                            }
+                        }
+                    });
+                    
+                    // 處理特殊需求學生
+                    if (document.getElementById('frontPoorVision').checked) {
+                        placePoorVisionStudents(availableStudents);
+                    }
+                    
+                    if (document.getElementById('backTall').checked) {
+                        placeTallStudents(availableStudents);
+                    }
+
+                    // 一般排列模式
+                    placeRegularMode(availableStudents);
+
+                    updateSeatDisplay();
+                    updateAllStats();
+                    saveToHistory();
+                    showStatus('座位表生成完成！', 'success');
+                    
+                } catch (error) {
+                    showStatus('生成失敗：' + error.message, 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }, 500);
+        }
+
+        // 放置視力不佳學生到前排
+        function placePoorVisionStudents(availableStudents) {
+            const poorVisionStudents = availableStudents.filter(s => 
+                s.special.includes('視力不佳')
+            );
+            
+            // 前兩排座位
+            for (let row = 0; row < Math.min(2, rows); row++) {
+                for (let col = 0; col < cols && poorVisionStudents.length > 0; col++) {
+                    const index = row * cols + col;
+                    if (!disabledSeats.has(index) && !lockedSeats.has(index) && !currentSeating[index]) {
+                        const student = poorVisionStudents.shift();
+                        currentSeating[index] = student;
+                        availableStudents.splice(availableStudents.indexOf(student), 1);
+                    }
+                }
+            }
+        }
+
+        // 放置高個子學生到後排
+        function placeTallStudents(availableStudents) {
+            const tallStudents = availableStudents.filter(s => 
+                s.special.includes('高個子')
+            );
+            
+            // 後兩排座位
+            for (let row = Math.max(0, rows - 2); row < rows; row++) {
+                for (let col = 0; col < cols && tallStudents.length > 0; col++) {
+                    const index = row * cols + col;
+                    if (!disabledSeats.has(index) && !lockedSeats.has(index) && !currentSeating[index]) {
+                        const student = tallStudents.shift();
+                        currentSeating[index] = student;
+                        availableStudents.splice(availableStudents.indexOf(student), 1);
+                    }
+                }
+            }
+        }
+
+        // 一般模式排列
+        function placeRegularMode(availableStudents) {
+            // 打亂學生順序
+            shuffleArray(availableStudents);
+            
+            if (document.getElementById('genderAlternate').checked) {
+                placeGenderAlternate(availableStudents);
+            } else {
+                placeRandom(availableStudents);
+            }
+        }
+
+        // 男女間隔排列
+        function placeGenderAlternate(availableStudents) {
+            const males = availableStudents.filter(s => s.gender === '男');
+            const females = availableStudents.filter(s => s.gender === '女');
+            
+            shuffleArray(males);
+            shuffleArray(females);
+            
+            let maleIndex = 0, femaleIndex = 0;
+            let expectMale = true;
+            
+            for (let i = 0; i < rows * cols; i++) {
+                if (disabledSeats.has(i) || lockedSeats.has(i) || currentSeating[i]) continue;
+                
+                if (expectMale && maleIndex < males.length) {
+                    currentSeating[i] = males[maleIndex++];
+                    expectMale = false;
+                } else if (!expectMale && femaleIndex < females.length) {
+                    currentSeating[i] = females[femaleIndex++];
+                    expectMale = true;
+                } else if (maleIndex < males.length) {
+                    currentSeating[i] = males[maleIndex++];
+                } else if (femaleIndex < females.length) {
+                    currentSeating[i] = females[femaleIndex++];
+                }
+            }
+        }
+
+        // 隨機排列
+        function placeRandom(availableStudents) {
+            let studentIndex = 0;
+            for (let i = 0; i < rows * cols && studentIndex < availableStudents.length; i++) {
+                if (!disabledSeats.has(i) && !lockedSeats.has(i) && !currentSeating[i]) {
+                    currentSeating[i] = availableStudents[studentIndex++];
+                }
+            }
+        }
+
+        // 隨機重排
+        function randomShuffle() {
+            if (students.length === 0) {
+                showStatus('請先輸入學生名單', 'error');
+                return;
+            }
+            
+            // 暫時清除所有編排規則
+            const originalRules = {
+                genderAlternate: document.getElementById('genderAlternate').checked,
+                frontPoorVision: document.getElementById('frontPoorVision').checked,
+                backTall: document.getElementById('backTall').checked
+            };
+            
+            document.getElementById('genderAlternate').checked = false;
+            document.getElementById('frontPoorVision').checked = false;
+            document.getElementById('backTall').checked = false;
+            
+            generateSeating();
+            
+            // 恢復原始規則
+            Object.entries(originalRules).forEach(([key, value]) => {
+                document.getElementById(key).checked = value;
+            });
+            
+            showStatus('隨機重排完成！', 'success');
+        }
+
+        // 優化配置
+        function optimizeLayout() {
+            if (students.length === 0) {
+                showStatus('請先輸入學生名單', 'error');
+                return;
+            }
+            
+            // 啟用所有優化規則
+            document.getElementById('genderAlternate').checked = true;
+            document.getElementById('frontPoorVision').checked = true;
+            document.getElementById('backTall').checked = true;
+            
+            generateSeating();
+            showStatus('配置已優化！', 'success');
+        }
+
+        // 更新座位顯示
+        function updateSeatDisplay() {
+            const seats = document.querySelectorAll('.seat');
+            seats.forEach((seat, index) => {
+                const student = currentSeating[index];
+                
+                // 清除所有類別
+                seat.className = 'seat';
+                
+                if (disabledSeats.has(index)) {
+                    seat.classList.add('disabled');
+                    seat.textContent = '';
+                } else if (lockedSeats.has(index)) {
+                    seat.classList.add('locked');
+                    if (student) {
+                        seat.classList.add(student.gender === '男' ? 'male' : 'female');
+                        seat.textContent = student.name;
+                        seat.draggable = true;
+                        
+                        // 添加特殊標記
+                        if (student.special.includes('視力不佳')) {
+                            seat.classList.add('poor-vision');
+                        }
+                        if (student.special.includes('高個子')) {
+                            seat.classList.add('tall');
+                        }
+                        
+                        // 綁定拖拽事件
+                        seat.addEventListener('dragstart', handleDragStart);
+                    } else {
+                        seat.classList.add('empty');
+                        seat.textContent = '鎖定';
+                        seat.draggable = false;
+                    }
+                } else if (student) {
+                    seat.classList.add(student.gender === '男' ? 'male' : 'female');
+                    seat.textContent = student.name;
+                    seat.draggable = true;
+                    
+                    // 添加特殊標記
+                    if (student.special.includes('視力不佳')) {
+                        seat.classList.add('poor-vision');
+                    }
+                    if (student.special.includes('高個子')) {
+                        seat.classList.add('tall');
+                    }
+                    
+                    // 綁定拖拽事件
+                    seat.addEventListener('dragstart', handleDragStart);
+                } else {
+                    seat.classList.add('empty');
+                    seat.textContent = '空位';
+                    seat.draggable = false;
+                }
+            });
+
+            updateAllStats();
+        }
+
+        // 拖拽事件處理
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            draggedIndex = parseInt(e.target.dataset.index);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (draggedElement) {
+                e.target.classList.add('drop-target');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetIndex = parseInt(e.target.dataset.index);
+            
+            if (draggedElement && draggedIndex !== null && draggedIndex !== targetIndex) {
+                if (!disabledSeats.has(targetIndex)) {
+                    // 交換學生
+                    const temp = currentSeating[draggedIndex];
+                    currentSeating[draggedIndex] = currentSeating[targetIndex];
+                    currentSeating[targetIndex] = temp;
+                    
+                    updateSeatDisplay();
+                    saveToStorage();
+                    showStatus('座位交換成功', 'success');
+                }
+            }
+            
+            // 清理拖拽狀態
+            document.querySelectorAll('.seat').forEach(seat => {
+                seat.classList.remove('dragging', 'drop-target');
+            });
+            draggedElement = null;
+            draggedIndex = null;
+        }
+
+        // 座位點擊事件
+        function handleSeatClick(e) {
+            const index = parseInt(e.target.dataset.index);
+            if (disabledSeats.has(index)) return;
+            
+            if (currentSeating[index]) {
+                const student = currentSeating[index];
+                const row = Math.floor(index / cols) + 1;
+                const col = (index % cols) + 1;
+                const special = student.special.length > 0 ? ` (${student.special.join(', ')})` : '';
+                showStatus(`第${row}排第${col}列: ${student.name}${special}`, 'info');
+            } else {
+                const row = Math.floor(index / cols) + 1;
+                const col = (index % cols) + 1;
+                showStatus(`第${row}排第${col}列: 空位`, 'info');
+            }
+        }
+
+        // 座位右鍵點擊事件
+        function handleSeatRightClick(e) {
+            e.preventDefault();
+            const index = parseInt(e.target.dataset.index);
+            
+            const actions = [];
+            
+            if (disabledSeats.has(index)) {
+                actions.push('啟用座位');
+            } else {
+                actions.push('禁用座位');
+            }
+            
+            if (lockedSeats.has(index)) {
+                actions.push('解鎖座位');
+            } else {
+                actions.push('鎖定座位');
+            }
+            
+            const action = prompt('選擇操作:\n1. ' + actions[0] + '\n2. ' + actions[1] + '\n\n請輸入 1 或 2:');
+            
+            if (action === '1') {
+                if (disabledSeats.has(index)) {
+                    disabledSeats.delete(index);
+                    showStatus('座位已啟用', 'success');
+                } else {
+                    disabledSeats.add(index);
+                    currentSeating[index] = null;
+                    showStatus('座位已禁用', 'warning');
+                }
+            } else if (action === '2') {
+                if (lockedSeats.has(index)) {
+                    lockedSeats.delete(index);
+                    showStatus('座位已解鎖', 'success');
+                } else {
+                    lockedSeats.set(index, currentSeating[index]);
+                    showStatus('座位已鎖定', 'warning');
+                }
+            }
+            
+            updateSeatDisplay();
+            saveToStorage();
+        }
+
+        // 清空座位
+        function clearSeating() {
+            if (confirm('確定要清空所有座位嗎？')) {
+                currentSeating = Array(rows * cols).fill(null);
+                updateSeatDisplay();
+                saveToStorage();
+                showStatus('座位表已清空', 'info');
+            }
+        }
+
+        // 匯出座位圖片 - 加入說明
+        function exportSeating() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 設定畫布大小
+            const seatSize = 80;
+            const gap = 10;
+            const legendHeight = 120;
+            canvas.width = Math.max(cols * (seatSize + gap) - gap + 40, 600);
+            canvas.height = rows * (seatSize + gap) - gap + 180 + legendHeight;
+            
+            // 背景
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 標題
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${classes[currentClass].name} - 座位配置圖`, canvas.width / 2, 35);
+            
+            // 日期和統計
+            ctx.font = '16px Arial';
+            ctx.fillText(`生成時間：${new Date().toLocaleString()}`, canvas.width / 2, 60);
+            
+            const maleCount = students.filter(s => s.gender === '男').length;
+            const femaleCount = students.filter(s => s.gender === '女').length;
+            ctx.fillText(`總計 ${students.length} 人 (男生 ${maleCount} 人，女生 ${femaleCount} 人)`, canvas.width / 2, 85);
+            
+            // 繪製座位
+            const startY = 110;
+            currentSeating.forEach((student, index) => {
+                const row = Math.floor(index / cols);
+                const col = index % cols;
+                const x = (canvas.width - (cols * (seatSize + gap) - gap)) / 2 + col * (seatSize + gap);
+                const y = startY + row * (seatSize + gap);
+                
+                // 座位背景
+                if (disabledSeats.has(index)) {
+                    ctx.fillStyle = '#ffebee';
+                } else if (student) {
+                    ctx.fillStyle = student.gender === '男' ? '#ebf3fd' : '#fdf2f8';
+                } else {
+                    ctx.fillStyle = '#f8f9fa';
+                }
+                
+                ctx.fillRect(x, y, seatSize, seatSize);
+                
+                // 座位邊框
+                ctx.strokeStyle = disabledSeats.has(index) ? '#e74c3c' : 
+                                  (student ? (student.gender === '男' ? '#3498db' : '#e91e63') : '#bdc3c7');
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, seatSize, seatSize);
+                
+                // 座位文字
+                ctx.fillStyle = '#2c3e50';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const text = disabledSeats.has(index) ? '×' : (student ? student.name : '空位');
+                ctx.fillText(text, x + seatSize / 2, y + seatSize / 2);
+                
+                // 特殊標記
+                if (student) {
+                    if (student.special.includes('視力不佳')) {
+                        ctx.fillStyle = '#9c27b0';
+                        ctx.beginPath();
+                        ctx.arc(x + seatSize - 10, y + 10, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                    if (student.special.includes('高個子')) {
+                        ctx.fillStyle = '#ff5722';
+                        ctx.beginPath();
+                        ctx.arc(x + 10, y + 10, 5, 0, 2 * Math.PI);
+                        ctx.fill();
+                    }
+                }
+            });
+            
+            // 圖例說明
+            const legendY = startY + rows * (seatSize + gap) + 30;
+            
+            // 圖例標題
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 18px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('圖例說明：', 20, legendY);
+            
+            // 圖例項目
+            const legendItems = [
+                { color: '#ebf3fd', border: '#3498db', text: '男學生' },
+                { color: '#fdf2f8', border: '#e91e63', text: '女學生' },
+                { color: '#f8f9fa', border: '#bdc3c7', text: '空座位' },
+                { color: '#ffebee', border: '#e74c3c', text: '禁用座位' }
+            ];
+            
+            ctx.font = '14px Arial';
+            legendItems.forEach((item, index) => {
+                const x = 20 + (index % 2) * 200;
+                const y = legendY + 30 + Math.floor(index / 2) * 30;
+                
+                // 圖例色塊
+                ctx.fillStyle = item.color;
+                ctx.fillRect(x, y - 8, 20, 16);
+                ctx.strokeStyle = item.border;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(x, y - 8, 20, 16);
+                
+                // 圖例文字
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillText(item.text, x + 30, y);
+            });
+            
+            // 特殊標記說明
+            ctx.fillText('特殊標記：', 350, legendY + 30);
+            
+            // 紫色圓點 - 視力不佳
+            ctx.fillStyle = '#9c27b0';
+            ctx.beginPath();
+            ctx.arc(360, legendY + 50, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillText('視力不佳（右上角紫點）', 375, legendY + 55);
+            
+            // 橘色圓點 - 高個子
+            ctx.fillStyle = '#ff5722';
+            ctx.beginPath();
+            ctx.arc(360, legendY + 75, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillText('高個子（左上角橘點）', 375, legendY + 80);
+
+            // 下載圖片
+            const link = document.createElement('a');
+            link.download = `${classes[currentClass].name}_座位表_${new Date().toISOString().slice(0, 10)}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            showStatus('座位圖片已匯出完成！', 'success');
+        }
+
+        // 匯出 CSV
+        function exportCSV() {
+            let csv = '\ufeff行,列,姓名,性別,特殊標記\n';
+            
+            currentSeating.forEach((student, index) => {
+                if (student) {
+                    const row = Math.floor(index / cols) + 1;
+                    const col = (index % cols) + 1;
+                    const special = student.special.join(';');
+                    csv += `${row},${col},"${student.name}","${student.gender}","${special}"\n`;
+                }
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${classes[currentClass].name}_座位表_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            
+            showStatus('CSV檔案已匯出完成！', 'success');
+        }
+
+        // 編輯班級名稱
+        function editClassName(classId) {
+            const currentName = classes[classId].name;
+            const newName = prompt('請輸入新的班級名稱：', currentName);
+            
+            if (newName && newName.trim() !== '' && newName !== currentName) {
+                classes[classId].name = newName.trim();
+                updateClassTabs();
+                saveToStorage();
+                showStatus('班級名稱已更新', 'success');
+            }
+        }
+
+        // 新增班級
+        function addNewClass() {
+            const className = prompt('請輸入班級名稱:');
+            if (!className || className.trim() === '') return;
+            
+            const classId = 'class_' + Date.now();
+            classes[classId] = {
+                name: className.trim(),
+                students: [],
+                history: []
+            };
+            
+            updateClassTabs();
+            switchClass(classId);
+            saveToStorage();
+            showStatus('新班級已建立', 'success');
+        }
+
+        // 刪除班級
+        function deleteClass(classId) {
+            if (Object.keys(classes).length <= 1) {
+                showStatus('至少需要保留一個班級', 'warning');
+                return;
+            }
+            
+            if (confirm(`確定要刪除班級「${classes[classId].name}」嗎？`)) {
+                delete classes[classId];
+                
+                if (currentClass === classId) {
+                    currentClass = Object.keys(classes)[0];
+                    loadClassData();
+                }
+                
+                updateClassTabs();
+                saveToStorage();
+                showStatus('班級已刪除', 'info');
+            }
+        }
+
+        // 切換班級
+        function switchClass(classId) {
+            currentClass = classId;
+            loadClassData();
+            updateClassTabs();
+            saveToStorage();
+        }
+
+        // 載入班級資料
+        function loadClassData() {
+            const classData = classes[currentClass];
+            
+            students = [...(classData.students || [])];
+            let text = '';
+            students.forEach(student => {
+                text += `${student.name},${student.gender}`;
+                if (student.special && student.special.length > 0) {
+                    text += ',' + student.special.join(',');
+                }
+                text += '\n';
+            });
+            document.getElementById('studentList').value = text.trim();
+            
+            updateHistoryDisplay();
+            
+            currentSeating = Array(rows * cols).fill(null);
+            disabledSeats.clear();
+            lockedSeats.clear();
+            updateSeatDisplay();
+            updateAllStats();
+        }
+
+        // 更新班級標籤
+        function updateClassTabs() {
+            const container = document.getElementById('classTabs');
+            container.innerHTML = '';
+            
+            Object.entries(classes).forEach(([classId, classData]) => {
+                const tab = document.createElement('div');
+                tab.className = `class-tab ${classId === currentClass ? 'active' : ''}`;
+                tab.dataset.class = classId;
+                
+                const tabName = document.createElement('span');
+                tabName.className = 'tab-name';
+                tabName.textContent = classData.name;
+                
+                const editBtn = document.createElement('span');
+                editBtn.className = 'edit-btn';
+                editBtn.textContent = '✎';
+                editBtn.title = '編輯班級名稱';
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    editClassName(classId);
+                };
+                
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'close-btn';
+                closeBtn.textContent = '×';
+                closeBtn.title = '刪除班級';
+                closeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteClass(classId);
+                };
+                
+                tab.appendChild(tabName);
+                tab.appendChild(editBtn);
+                tab.appendChild(closeBtn);
+                
+                tab.addEventListener('click', () => {
+                    switchClass(classId);
+                });
+                
+                container.appendChild(tab);
+            });
+            
+            const addBtn = document.createElement('button');
+            addBtn.className = 'add-class-btn';
+            addBtn.textContent = '+ 新增班級';
+            addBtn.onclick = addNewClass;
+            container.appendChild(addBtn);
+        }
+
+        // 更新所有統計資訊
+        function updateAllStats() {
+            const maleCount = students.filter(s => s.gender === '男').length;
+            const femaleCount = students.filter(s => s.gender === '女').length;
+            const totalSeats = rows * cols;
+            const availableSeats = totalSeats - disabledSeats.size;
+            const specialCount = students.filter(s => s.special && s.special.length > 0).length;
+            const occupancyRate = totalSeats > 0 ? Math.round((students.length / availableSeats) * 100) : 0;
+            
+            // 更新頂部統計
+            document.getElementById('maleCount').textContent = `男生：${maleCount}人`;
+            document.getElementById('femaleCount').textContent = `女生：${femaleCount}人`;
+            document.getElementById('seatCount').textContent = `座位：${availableSeats}/${totalSeats}個`;
+            
+            // 更新右側詳細統計
+            document.getElementById('totalStudents').textContent = `總學生數：${students.length}人`;
+            document.getElementById('maleRatio').textContent = `男生比例：${students.length > 0 ? Math.round((maleCount / students.length) * 100) : 0}%`;
+            document.getElementById('femaleRatio').textContent = `女生比例：${students.length > 0 ? Math.round((femaleCount / students.length) * 100) : 0}%`;
+            document.getElementById('specialNeeds').textContent = `特殊需求：${specialCount}人`;
+            document.getElementById('occupancyRate').textContent = `座位使用率：${occupancyRate}%`;
+        }
+
+        // 儲存到歷史記錄
+        function saveToHistory() {
+            const record = {
+                timestamp: new Date().toLocaleString(),
+                seating: [...currentSeating],
+                students: students.length,
+                rows: rows,
+                cols: cols
+            };
+            
+            if (!classes[currentClass].history) {
+                classes[currentClass].history = [];
+            }
+            
+            classes[currentClass].history.unshift(record);
+            
+            if (classes[currentClass].history.length > 10) {
+                classes[currentClass].history = classes[currentClass].history.slice(0, 10);
+            }
+            
+            updateHistoryDisplay();
+            saveToStorage();
+        }
+
+        // 更新歷史記錄顯示
+        function updateHistoryDisplay() {
+            const container = document.getElementById('historyList');
+            const history = classes[currentClass].history || [];
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #95a5a6;">暫無歷史記錄</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            history.forEach((record, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                const info = document.createElement('div');
+                info.innerHTML = `
+                    <div style="font-weight: 500; font-size: 13px;">${record.timestamp}</div>
+                    <div style="font-size: 11px; color: #7f8c8d;">學生數: ${record.students} | ${record.rows}×${record.cols}</div>
+                `;
+                
+                const deleteBtn = document.createElement('span');
+                deleteBtn.className = 'history-delete';
+                deleteBtn.textContent = '×';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteHistory(index);
+                };
+                
+                item.appendChild(info);
+                item.appendChild(deleteBtn);
+                
+                item.addEventListener('click', () => {
+                    loadFromHistory(index);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+
+        // 從歷史記錄載入
+        function loadFromHistory(index) {
+            const history = classes[currentClass].history || [];
+            if (index >= 0 && index < history.length) {
+                const record = history[index];
+                
+                if (record.rows !== rows || record.cols !== cols) {
+                    rows = record.rows;
+                    cols = record.cols;
+                    document.getElementById('rows').value = rows;
+                    document.getElementById('cols').value = cols;
+                    updateSeatingGrid();
+                }
+                
+                currentSeating = [...record.seating];
+                updateSeatDisplay();
+                showStatus('已載入歷史座位表', 'success');
+            }
+        }
+
+        // 刪除歷史記錄
+        function deleteHistory(index) {
+            const history = classes[currentClass].history || [];
+            if (index >= 0 && index < history.length) {
+                history.splice(index, 1);
+                updateHistoryDisplay();
+                saveToStorage();
+                showStatus('歷史記錄已刪除', 'info');
+            }
+        }
+
+        // 清空歷史記錄
+        function clearHistory() {
+            if (confirm('確定要清空所有歷史記錄嗎？')) {
+                classes[currentClass].history = [];
+                updateHistoryDisplay();
+                saveToStorage();
+                showStatus('歷史記錄已清空', 'info');
+            }
+        }
+
+        // 更新活動規則顯示
+        function updateActiveRules() {
+            const rules = [];
+            
+            if (document.getElementById('genderAlternate').checked) {
+                rules.push('男女間隔排列');
+            }
+            if (document.getElementById('frontPoorVision').checked) {
+                rules.push('視力不佳坐前排');
+            }
+            if (document.getElementById('backTall').checked) {
+                rules.push('高個子坐後排');
+            }
+            
+            if (rules.length > 0) {
+                setTimeout(() => {
+                    showStatus('目前啟用規則：' + rules.join('、'), 'info');
+                }, 100);
+            }
+        }
+
+        // 顯示狀態訊息
+        function showStatus(message, type = 'info') {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = message;
+            indicator.className = `status-indicator active ${type}`;
+            
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 4000);
+        }
+
+        // 顯示/隱藏載入動畫
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // 工具函式：打亂陣列
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 儲存到本地儲存
+        function saveToStorage() {
+            const data = {
+                classes: classes,
+                currentClass: currentClass,
+                rows: rows,
+                cols: cols,
+                disabledSeats: Array.from(disabledSeats),
+                lockedSeats: Array.from(lockedSeats.entries()),
+                rules: {
+                    genderAlternate: document.getElementById('genderAlternate').checked,
+                    frontPoorVision: document.getElementById('frontPoorVision').checked,
+                    backTall: document.getElementById('backTall').checked
+                }
+            };
+            
+            localStorage.setItem('seatingTool', JSON.stringify(data));
+        }
+
+        // 從本地儲存載入
+        function loadFromStorage() {
+            const saved = localStorage.getItem('seatingTool');
+            if (!saved) return;
+            
+            try {
+                const data = JSON.parse(saved);
+                
+                if (data.classes) {
+                    classes = data.classes;
+                }
+                
+                if (data.currentClass && classes[data.currentClass]) {
+                    currentClass = data.currentClass;
+                }
+                
+                if (data.rows) {
+                    rows = data.rows;
+                    document.getElementById('rows').value = rows;
+                }
+                if (data.cols) {
+                    cols = data.cols;
+                    document.getElementById('cols').value = cols;
+                }
+                
+                if (data.disabledSeats) {
+                    disabledSeats = new Set(data.disabledSeats);
+                }
+                if (data.lockedSeats) {
+                    lockedSeats = new Map(data.lockedSeats);
+                }
+                
+                if (data.rules) {
+                    Object.entries(data.rules).forEach(([key, value]) => {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.checked = value;
+                        }
+                    });
+                }
+                
+                loadClassData();
+                updateClassTabs();
+                
+            } catch (error) {
+                console.error('載入設定失敗:', error);
+            }
+        }
+    </script>
+</body>
+</html>
